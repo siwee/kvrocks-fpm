@@ -28,7 +28,7 @@ jobs:
 
       - name: Build
         run: |
-          git clone -b v{{ env.VERSION }} https://github.com/apache/kvrocks kvrocks
+          git clone -b v{{ env.VERSION }} https://github.com/apache/kvrocks
           cd kvrocks
           ./x.py build -DPORTABLE=1 -DCMAKE_BUILD_TYPE=Release -j $(nproc)
       
