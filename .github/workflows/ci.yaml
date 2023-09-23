@@ -33,6 +33,7 @@ jobs:
           ./x.py build -DPORTABLE=1 -DCMAKE_BUILD_TYPE=Release -j $(nproc)
       
       - name: Make release directory
+        run: |
           mkdir release
           mkdir release/bin release/share
           mkdir release/share/kvrocks
