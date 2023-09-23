@@ -48,13 +48,13 @@ jobs:
         uses: bpicode/github-action-fpm@v0.9.2
         with:
           fpm_args: './release'
-          fpm_opts: '-t deb -v {{ env.VERSION }} --iteration {{ env.ITERATION }} ${{ env.FPM_OPTS }}'
+          fpm_opts: '-t deb -v ${{ env.VERSION }} --iteration ${{ env.ITERATION }} ${{ env.FPM_OPTS }}'
 
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           name: |
-            {{ env.VERSION }}-{{ env.ITERATION }}
+            ${{ env.VERSION }}-${{ env.ITERATION }}
           files: |
             ./*.deb
         env:
