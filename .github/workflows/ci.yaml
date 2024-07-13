@@ -45,13 +45,13 @@ jobs:
           cp kvrocks/utils/systemd/kvrocks.service release/share/kvrocks
 
       - name: Package Deb
-        uses: bpicode/github-action-fpm@v0.9.2
+        uses: bpicode/github-action-fpm@v0.9.3
         with:
           fpm_args: '.'
           fpm_opts: '-t deb -v ${{ env.VERSION }} --iteration ${{ env.ITERATION }} -C release ${{ env.FPM_OPTS }}'
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2.0.6
         with:
           name: |
             ${{ env.VERSION }}-${{ env.ITERATION }}
