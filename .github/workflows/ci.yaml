@@ -3,15 +3,17 @@ name: Release
 on: workflow_dispatch
 
 env:
-  FPM_OPTS: >-
-    -s dir --prefix '/usr' -n kvrocks --verbose -a native 
-    --config-files /usr/share/kvrocks/kvrocks.conf 
-    --description 'A distributed key value NoSQL database that uses RocksDB as storage engine and is compatible with Redis protocol' 
+  DEB_FPM_OPTS: >-
+    --prefix '/usr'
+    --config-files /usr/share/kvrocks/kvrocks.conf
+  COMMON_FPM_OPTS: >-
+    -s dir -n kvrocks --verbose -a native
+    --description 'A distributed key value NoSQL database that uses RocksDB as storage engine and is compatible with Redis protocol'
     --url 'https://kvrocks.apache.org' --license 'Apache-2.0'
 
 jobs:
   release-packages:
-    name: Release DEB Package
+    name: Release DEB & RPM Package
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4.0.0
@@ -33,7 +35,7 @@ jobs:
           cd kvrocks
           ./x.py build -DPORTABLE=1 -DCMAKE_BUILD_TYPE=Release -j $(nproc)
       
-      - name: Make release directory
+      - name: Make DEB release directory
         run: |
           mkdir release
           mkdir release/bin release/share
@@ -44,11 +46,30 @@ jobs:
           cp -r kvrocks/LICENSE kvrocks/NOTICE kvrocks/licenses release/share/kvrocks
           cp kvrocks/utils/systemd/kvrocks.service release/share/kvrocks
 
-      - name: Package Deb
+      - name: Package DEB
         uses: bpicode/github-action-fpm@v0.9.3
         with:
           fpm_args: '.'
-          fpm_opts: '-t deb -v ${{ env.VERSION }} --iteration ${{ env.ITERATION }} -C release ${{ env.FPM_OPTS }}'
+          fpm_opts: '-t deb -v ${{ env.VERSION }} --iteration ${{ env.ITERATION }} -C release ${{ env.COMMON_FPM_OPTS }} ${{ env.DEB_FPM_OPTS }}'
+      
+      - name: Make RPM release directory
+        run: |
+          mkdir -p rpm-release/etc/kvrocks
+          mkdir -p rpm-release/usr/bin
+          mkdir -p rpm-release/usr/lib/systemd/system
+          mkdir -p rpm-release/usr/share/licenses/kvrocks
+
+          cp kvrocks/build/kvrocks rpm-release/usr/bin/
+          cp kvrocks/build/kvrocks2redis rpm-release/usr/bin/
+          cp kvrocks/kvrocks.conf rpm-release/etc/kvrocks/
+          cp -r kvrocks/LICENSE kvrocks/NOTICE kvrocks/licenses/* rpm-release/usr/share/licenses/kvrocks/
+          cp kvrocks/utils/systemd/kvrocks.service rpm-release/usr/lib/systemd/system/
+
+      - name: Package RPM
+        uses: bpicode/github-action-fpm@v0.9.3
+        with:
+          fpm_args: '.'
+          fpm_opts: '-t rpm -v ${{ env.VERSION }} --iteration ${{ env.ITERATION }} -C rpm-release ${{ env.COMMON_FPM_OPTS }}'
 
       - name: Release
         uses: softprops/action-gh-release@v2.0.6
@@ -57,5 +78,6 @@ jobs:
             ${{ env.VERSION }}-${{ env.ITERATION }}
           files: |
             ./*.deb
+            ./*.rpm
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
